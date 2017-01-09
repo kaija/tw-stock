@@ -27,14 +27,17 @@ class stockImport(object):
     def saveDate(self, date=None):
         date_str = date.strftime("%m/%d/%Y")
         print('{} finished'.format(date_str))
-        f = open('/tmp/twstock.tmp', 'w')
+        f = open('./twstock.tmp', 'w')
         f.write(date_str)
 
     def loadDate(self):
-        f = open('/tmp/twstock.tmp', 'r')
-        date_str = f.readline()
-        #default set to 4 PM
-        return datetime.datetime.strptime(date_str + " 16:00:00", "%m/%d/%Y %H:%M:%S")
+        try:
+            f = open('./twstock.tmp', 'r')
+            date_str = f.readline()
+            #default set to 4 PM
+            return datetime.datetime.strptime(date_str + " 16:00:00", "%m/%d/%Y %H:%M:%S")
+        except IOError:
+            return datetime.datetime.strptime("1/1/2010 16:00:00", "%m/%d/%Y %H:%M:%S")
 
     def downloadData(self):
         start_day = datetime.date(2004, 2, 11);

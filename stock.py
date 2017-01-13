@@ -132,3 +132,94 @@ class stockImport(object):
                     self.insertToStock(stockid, df1, date)
         self.saveDate(date)
 
+    def getExpectCP(self, df, date):
+        today = datetime.date.today()
+        one_day = timedelta(days=1)
+        if date > today:
+            #print "over today"
+            #print date.strftime("%Y-%m-%d")
+            return None
+        try:
+            date_str = date.strftime("%Y-%m-%d")
+            return df.loc[date_str, 'CP']
+        except KeyError as e:
+            return self.getExpectCP(df, date + one_day)
+        
+
+    def loadTrainDataById(self, stock_id, start_date, days, expect):
+        one_day = timedelta(days=1)
+        stop_date = start_date + one_day * days
+        expect_date = start_date + one_day * (days + expect)
+        today = datetime.date.today()
+        if stop_date > today:
+            return None
+        try:
+            start_date_str = start_date.strftime("%Y-%m-%d")
+            stop_date_str = stop_date.strftime("%Y-%m-%d")
+            expect_date_str = expect_date.strftime("%Y-%m-%d")
+            df = pd.DataFrame.from_csv('bystock/' + stock_id + '.csv')
+            print "from:" + start_date_str + " to:" + stop_date_str
+            dft = df.loc[start_date_str:stop_date_str]
+            #print dft.as_matrix()
+            #print dft.reset_index().values
+            dfcp = df.loc[start_date_str:stop_date_str, 'CP']
+            #print df.loc[start_date_str:expect_date_str, 'CP']
+            expcp = self.getExpectCP(df, expect_date)
+            if expcp == None:
+                return
+            #print dfcp
+            print 'max during train:' + str(dfcp.max())
+            print str(expect) + ' days ' + expect_date_str + ' close price' + str(expcp)
+            if expcp > dfcp.max():
+                print 'up'
+            else:
+                print 'down'
+                
+        except KeyError as e:
+            print "out of range , try next day"
+        except IOError:
+            print "no such stock id"
+
+    def loadTrainDataByIdFixedRow(self, stock_id, start_date, days, expect):
+        one_day = timedelta(days=1)
+        stop_date = start_date + one_day * days
+        expect_date = start_date + one_day * (days + expect)
+        today = datetime.date.today()
+        res = 0
+        if stop_date > today:
+            return None
+        try:
+            start_date_str = start_date.strftime("%Y-%m-%d")
+            stop_date_str = stop_date.strftime("%Y-%m-%d")
+            expect_date_str = expect_date.strftime("%Y-%m-%d")
+            today_date_str = datetime.date.today()
+            df = pd.DataFrame.from_csv('bystock/' + stock_id + '.csv')
+            print "from:" + start_date_str + " to:" + stop_date_str
+            dft = df.loc[start_date_str:today_date_str]
+            if  dft['CP'].count() < days + expect:
+                print 'data is not enough for train or validate'
+                return
+            print dft[:days]
+            #print dft.as_matrix()
+            #print dft.reset_index().values
+            #print df.loc[start_date_str:expect_date_str, 'CP']
+            dfcp = dft[:days]
+            data = dft.as_matrix()
+            expcpdf = dfcp.tail(1)
+            expcp = expcpdf['CP'].max()
+            tmax = dft[:days]['CP'].max()
+            print 'last price:' + str(expcpdf['CP'])
+            print 'max during train:' + str(tmax)
+            print str(expect) + ' days close price:' + str(expcp)
+            if expcp > tmax:
+                res = 1
+                print 'up'
+            else:
+                res = 0
+                print 'down'
+            return data, res
+                
+        except KeyError as e:
+            print "out of range , try next day"
+        except IOError:
+            print "no such stock id"

@@ -193,30 +193,39 @@ class stockImport(object):
             stop_date_str = stop_date.strftime("%Y-%m-%d")
             expect_date_str = expect_date.strftime("%Y-%m-%d")
             today_date_str = datetime.date.today()
+            #read data frame from stock file
             df = pd.DataFrame.from_csv('bystock/' + stock_id + '.csv')
-            print "from:" + start_date_str + " to:" + stop_date_str
+            #print "from:" + start_date_str + " to:" + stop_date_str
+            #count total record from start to now, check if data record is enough
             dft = df.loc[start_date_str:today_date_str]
             if  dft['CP'].count() < days + expect:
                 print 'data is not enough for train or validate'
                 return
-            print dft[:days]
+            #retrive enough data record   days + expect days
+            dft = dft[:days + expect]
+            #get the expect date data record
+            expcpdf = dft.tail(1)
+            #print dft
+            #print dft[:days]
             #print dft.as_matrix()
             #print dft.reset_index().values
-            #print df.loc[start_date_str:expect_date_str, 'CP']
+            #first n days data record for training
             dfcp = dft[:days]
-            data = dft.as_matrix()
-            expcpdf = dfcp.tail(1)
+            #convert to matrix
+            data = dfcp.as_matrix()
+            #get expected close price
             expcp = expcpdf['CP'].max()
+            #get max close price in training data
             tmax = dft[:days]['CP'].max()
-            print 'last price:' + str(expcpdf['CP'])
-            print 'max during train:' + str(tmax)
-            print str(expect) + ' days close price:' + str(expcp)
+            #print 'last price:' + str(expcpdf['CP'])
+            #print 'max during train:' + str(tmax)
+            #print str(expect) + ' days close price:' + str(expcp)
             if expcp > tmax:
                 res = 1
-                print 'up'
+                #print 'up'
             else:
                 res = 0
-                print 'down'
+                #print 'down'
             return data, res
                 
         except KeyError as e:

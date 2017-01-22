@@ -200,7 +200,7 @@ class stockImport(object):
             dft = df.loc[start_date_str:today_date_str]
             if  dft['CP'].count() < days + expect:
                 print 'data is not enough for train or validate'
-                return
+                return None, None
             #retrive enough data record   days + expect days
             dft = dft[:days + expect]
             #get the expect date data record
@@ -232,3 +232,23 @@ class stockImport(object):
             print "out of range , try next day"
         except IOError:
             print "no such stock id"
+
+    def loadAllTrainDataByStock(self, stock_id, start_date, days, expect):
+        today = datetime.date.today()
+        one_day = timedelta(days=1)
+        da = start_date
+        X = []
+        Y = []
+        while da < today:
+            da = da + one_day
+            d, r = self.loadTrainDataByIdFixedRow(stock_id, da, days, expect)
+            if d == None:
+                break
+            x = sum(d.tolist(), [])
+            X.append(x)
+            Y.append(r)
+            #print("---------------------------------------------")
+            #print x
+            #print("---------------------------------------------")
+            print r
+        return X,Y

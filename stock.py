@@ -187,7 +187,7 @@ class stockImport(object):
         today = datetime.date.today()
         res = 0
         if stop_date > today:
-            return None
+            return None, None
         try:
             start_date_str = start_date.strftime("%Y-%m-%d")
             stop_date_str = stop_date.strftime("%Y-%m-%d")
@@ -242,7 +242,7 @@ class stockImport(object):
         while da < today:
             da = da + one_day
             d, r = self.loadTrainDataByIdFixedRow(stock_id, da, days, expect)
-            if d == None:
+            if d is None:
                 break
             x = sum(d.tolist(), [])
             X.append(x)
@@ -250,5 +250,5 @@ class stockImport(object):
             #print("---------------------------------------------")
             #print x
             #print("---------------------------------------------")
-            print r
+            #print r
         return X,Y

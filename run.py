@@ -4,6 +4,10 @@ import os
 from datetime import timedelta
 from stock import stockImport
 
+#y, m, d, h, min, sec, wd, yd, i = datetime.datetime.now().timetuple()
+#print h
+#exit(0)
+
 sk = stockImport()
 sk.downloadData()
 last_update = sk.loadDate()
@@ -14,14 +18,18 @@ last_update = sk.loadDate()
 #start_date = datetime.date(2004, 2, 11)
 
 #from last update
+
 start_date = last_update.date()
 today = datetime.date.today()
 one_day = timedelta(days=1)
 da = start_date
-
+y, m, d, h, min, sec, wd, yd, i = datetime.datetime.now().timetuple()
+end_time = today
+if h > 16:
+    end_time = today + one_day
 #convert CSV file
 if True:
-    while da < today:
+    while da < end_time:
         filePath = 'data/' + da.strftime("%Y%m%d") + '.csv'
         sk.convertCSV(filePath, da)
         da = da + one_day

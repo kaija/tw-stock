@@ -43,10 +43,15 @@ class stockImport(object):
         start_day = datetime.date(2004, 2, 11);
         today = datetime.date.today()
         one_day = timedelta(days=1)
+        y, m, d, h, min, sec, wd, yd, i = datetime.datetime.now().timetuple()
+        end_time = today
+        if h > 16:
+          end_time = today + one_day
         print "start download missing data"
         print "checking from " + start_day.strftime("%Y-%m-%d") + " to " + today.strftime("%Y-%m-%d")
+        print "checking end time " + end_time.strftime("%Y-%m-%d")
         download_date = start_day
-        while download_date < today:
+        while download_date < end_time:
             file_name = "data/" + download_date.strftime("%Y%m%d") + ".csv"
             if os.path.isfile(file_name):
                 download_date += one_day

@@ -1,0 +1,14 @@
+top (days)  (number)     :    list past n days growth / drop top n (number) stocks 
+top10                    :    list top 10 growth/drop in past 1 month
+info (stock id)  (days)  :    list past n days stock information
+
+
+OP   : open price開盤價
+CP   : close price收盤價
+HP   : highest price最高價
+LP   : lowest price最低價
+DF   : price difference, differential開收盤價差
+RD   : rise drop漲跌
+TV   : trading volume交易量
+TC   : trading count交易數
+TO   : turnover交易金額

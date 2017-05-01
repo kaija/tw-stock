@@ -1,6 +1,8 @@
 top (days)  (number)     :    list past n days growth / drop top n (number) stocks 
+top2 (days)  (number)    :    list past n days growth / drop top n (number) stocks v2
 top10                    :    list top 10 growth/drop in past 1 month
 info (stock id)  (days)  :    list past n days stock information
+info2 (stock id)  (days) :    list past n days stock information v2
 
 
 OP   : open price開盤價
@@ -12,3 +14,6 @@ RD   : rise drop漲跌
 TV   : trading volume交易量
 TC   : trading count交易數
 TO   : turnover交易金額
+HR   : Highest Rate
+LR   : lowest Rate
+CR   : Close Rate

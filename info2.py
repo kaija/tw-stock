@@ -33,7 +33,12 @@ def main(days=30, sid=None):
             df_f.loc[idx] = row
             #print row
         final = df_f.tail(days)
-        final = final.applymap(lambda x: '%.2f' % x)
+        final['TV'] = final['TV'].apply(lambda x: int(x/1000) )
+        final['HR'] = final['HR'].apply(lambda x: '%.2f' % x )
+        final['LR'] = final['LR'].apply(lambda x: '%.2f' % x )
+        final['OR'] = final['OR'].apply(lambda x: '%.2f' % x )
+        final['CR'] = final['CR'].apply(lambda x: '%.2f' % x )
+        #final['HR'] = final.apply(lambda x: '%.2f' % x)
         del final['HP']
         del final['LP']
         del final['DF']

@@ -1,8 +1,11 @@
 top (days)  (number)     :    list past n days growth / drop top n (number) stocks 
 top2 (days)  (number)    :    list past n days growth / drop top n (number) stocks v2
+top3 (days)  (number)    :    list past n days growth / drop top n (number) stocks v3 include stock and emerging
 top10                    :    list top 10 growth/drop in past 1 month
 info (stock id)  (days)  :    list past n days stock information
 info2 (stock id)  (days) :    list past n days stock information v2
+potential2 (stock id)    :    list potential stock in past 50 working days
+potentialall             :    list all potential stocks in past 50 working days
 
 
 OP   : open price開盤價

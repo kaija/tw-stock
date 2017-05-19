@@ -32,7 +32,7 @@ def filter1(data):
         if math.isnan(row['tv_mean']):
             idx = idx + 1
             continue
-        if row['TV'] > 2 * row['tv_mean'] or row['CR'] == 10:
+        if (row['TV'] > 2 * row['tv_mean'] and row['CR'] > 5) or row['OR'] == 10:
             if start_idx == 0 or idx - start_idx > WIND:
                 start_date = i
                 start_idx = idx
@@ -68,7 +68,8 @@ def filter1(data):
 def filter2(data, starts):
     data['tv_mean'] = data['TV'].rolling(WIND).mean().shift(1)
     
-
+def mod1000(row):
+    return row['TV'] / 1000
 def main(days=30, sid=None, date_from=None):
 
     res = pd.DataFrame(columns=('id', 'rate'))
@@ -102,13 +103,16 @@ def main(days=30, sid=None, date_from=None):
             df_f.loc[idx] = row
             #print row
         final = df_f.tail(days)
-        final['TV'] = final['TV'].apply(lambda x: int(x/1000) )
-        final['HR'] = final['HR'].apply(lambda x: '%.2f' % x )
-        final['LR'] = final['LR'].apply(lambda x: '%.2f' % x )
-        final['OR'] = final['OR'].apply(lambda x: '%.2f' % x )
-        final['CR'] = final['CR'].apply(lambda x: '%.2f' % x )
+        #print final['TV']
+        #final['TV'] = final['TV'].apply(lambda x: x/1000 )
+        #print final.apply(lambda x: mod1000(x) )
+        final['TV'] = final.apply(lambda x: x/1000 )
+        final['HR'] = final['HR'].apply(lambda x: float('%.2f' % x ))
+        final['LR'] = final['LR'].apply(lambda x: float('%.2f' % x ))
+        final['OR'] = final['OR'].apply(lambda x: float('%.2f' % x ))
+        final['CR'] = final['CR'].apply(lambda x: float('%.2f' % x ))
         #final['HR'] = final.apply(lambda x: '%.2f' % x)
-        print filter1(final)
+        #print filter1(final)
         print "https://tw.stock.yahoo.com/q/ta?s=" + sid
         #print subset 
         #print df.tail(days)

@@ -32,7 +32,7 @@ def filter1(data):
         if math.isnan(row['tv_mean']):
             idx = idx + 1
             continue
-        if row['TV'] > 2 * row['tv_mean'] or row['CR'] == 10:
+        if (row['TV'] > 2 * row['tv_mean'] and row['CR'] > 5) or row['OR'] == 10:
             if start_idx == 0 or idx - start_idx > WIND:
                 start_date = i
                 start_idx = idx
@@ -104,11 +104,11 @@ def preprocess(days=30, sid=None, date_from=None):
             df_f.loc[idx] = row
             #print row
         final = df_f.tail(days)
-        final['TV'] = final['TV'].apply(lambda x: int(x/1000) )
-        final['HR'] = final['HR'].apply(lambda x: '%.2f' % x )
-        final['LR'] = final['LR'].apply(lambda x: '%.2f' % x )
-        final['OR'] = final['OR'].apply(lambda x: '%.2f' % x )
-        final['CR'] = final['CR'].apply(lambda x: '%.2f' % x )
+        final['TV'] = final['TV'].apply(lambda x: x/1000 )
+        final['HR'] = final['HR'].apply(lambda x: float('%.2f' % x ))
+        final['LR'] = final['LR'].apply(lambda x: float('%.2f' % x ))
+        final['OR'] = final['OR'].apply(lambda x: float('%.2f' % x ))
+        final['CR'] = final['CR'].apply(lambda x: float('%.2f' % x ))
         #final['HR'] = final.apply(lambda x: '%.2f' % x)
         result, diff = filter1(final)
         #print "https://tw.stock.yahoo.com/q/ta?s=" + sid
@@ -130,17 +130,18 @@ def main(days=30, sid=None, date_from=None):
             path = root.split(os.sep)
             for f in files:
                 stockid = f.split('.')[0]
-                print stockid
+                #print stockid
                 if len(f) != 8:
                     continue
                 res, diff = preprocess(days=days, sid = stockid, date_from=date_from)
                 if len(res) > 0:
                     df = df.append({'stockid': stockid, 'rate': diff, 'hits': res}, ignore_index=True)
-        sdf =  df.sort(['rate'], ascending=[1])
-        print "crazy......."
-        print sdf.head(10)
-        print "warn up......."
-        print sdf.tail(10)
+        #sdf =  df.sort(['rate'], ascending=[1])
+        #print "crazy......."
+        #print sdf.head(10)
+        #print "warn up......."
+        #print sdf.tail(10)
+        print df['stockid'].to_string(index=False)
 
 
     #print res.sort(['rate'])

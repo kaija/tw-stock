@@ -5,12 +5,17 @@ import os
 import datetime
 from datetime import timedelta
 import argparse
+import os.path
 
 def main(days=30, sid=None):
 
     res = pd.DataFrame(columns=('id', 'rate'))
     try:
-        df = pd.DataFrame.from_csv('bystock/' + sid + ".csv")
+        if os.path.isfile('bystock/' + sid + ".csv"):
+            df = pd.DataFrame.from_csv('bystock/' + sid + ".csv")
+        else:
+            df = pd.DataFrame.from_csv('byemg/' + sid + ".csv")
+
         subset = df.tail(days + 1)
         last_cp = 0
         df_r = subset[0:0]

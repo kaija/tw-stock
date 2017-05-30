@@ -57,10 +57,15 @@ class stockImport(object):
                 download_date += one_day
                 continue
             httpreq = httplib.HTTPConnection('www.twse.com.tw')
-            headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+            #http://www.twse.com.tw/exchangeReport/MI_INDEX?response=csv&date=20170526&type=ALL
+            #headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+            print 
             date_str = str(download_date.year - 1911 ) + download_date.strftime("/%m/%d")
             form = urllib.urlencode({'download': 'csv', 'qdate': date_str, 'selectType': 'ALLBUT0999'})
-            httpreq.request("POST", "/ch/trading/exchange/MI_INDEX/MI_INDEX.php", form, headers);
+            #httpreq.request("POST", "/ch/trading/exchange/MI_INDEX/MI_INDEX.php", form, headers);
+            full_url = "exchangeReport/MI_INDEX?response=csv&date=" + download_date.strftime("%Y%m%d") + "&type=ALL"
+            print full_url
+            httpreq.request("GET", "http://www.twse.com.tw/exchangeReport/MI_INDEX?response=csv&date=" + download_date.strftime("%Y%m%d") + "&type=ALL");
             httpres =  httpreq.getresponse()
             stock_csv =  httpres.read()
             print "downloading " + file_name
@@ -84,6 +89,17 @@ class stockImport(object):
             print('stock id: {} not exist'.format(stockid))
             row.to_csv('bystock/' + stockid + '.csv')
 
+    def prepcsv(self, csv):
+        ret = []
+        for i in csv:
+            tmp = i
+            tmp = tmp.replace(',', '')
+            tmp = tmp.replace('\'', '')
+            tmp = tmp.replace('\"', '')
+            tmp = tmp.replace('=', '')
+            ret.append(tmp)
+        return ret
+
     def convertCSV(self, file_path=None, date=None):
         print('convert csv {}'.format(file_path))
         with open(file_path, 'rb') as csvfile:
@@ -92,16 +108,23 @@ class stockImport(object):
                 if len(row) < 16:
                     #abnormal some column missing?
                     continue
-                if len(row) == 17:
+                #if len(row) == 17:
                     #abnormal should not more than 16 column
-                    print(row)
-                if len(row) == 16:
+                    #print(row)
+                if len(row) == 17:
                     stockid=row[0].replace('=', '')
                     stockid=stockid.replace('"', '')
                     stockid=stockid.strip()
-                    if not row[2].isdigit():
+                    if stockid.startswith('('):
+                        continue
+                    checkrow = row[11].replace(',', '')
+                    checkrow = checkrow.replace('"', '')
+                    checkrow = checkrow.replace('=', '')
+                    if not checkrow[0].isdigit():
                         #skip column title
                         continue
+                    row = self.prepcsv(row)
+
                     TV=int(row[2])
                     TC=int(row[3])
                     TO=int(row[4])
@@ -115,7 +138,7 @@ class stockImport(object):
                     else:
                         DF=0
                         RD=0
-                    
+
                     PE=float(row[15])
                     try:
                         OP=float(row[5])
@@ -127,13 +150,14 @@ class stockImport(object):
                         CP=None
                         HP=None
                         LP=None
-                    #print(stockid)
-                    #print('OP:{}\nCP:{}\nHP:{}\nLP:{}\nDF:{}\nRD:{}\nTV:{}\nTC:{}\nTO:{}\n'.format( OP, CP, HP, LP, DF, RD, TV, TC, TO))
+                    #print('OP:{} CP:{} HP:{} LP:{} DF:{} RD:{} TV:{} TC:{} TO:{}\n'.format( OP, CP, HP, LP, DF, RD, TV, TC, TO))
                     cols = ['OP', 'CP', 'HP', 'LP', 'DF', 'RD', 'TV', 'TC', 'TO']
                     date_index = pd.date_range(date.strftime("%m/%d/%Y"), periods=1)
                     df1 = pd.DataFrame([[OP, CP, HP, LP, DF, RD, TV, TC, TO]], columns=cols)
                     df1['date'] = date_index
                     df1 = df1.set_index(['date'])
+                    #print stockid
+                    #print df1
                     self.insertToStock(stockid, df1, date)
         self.saveDate(date)
 

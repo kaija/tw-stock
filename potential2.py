@@ -27,7 +27,6 @@ def filter1(data):
     #print data.index
     #print data['TV'].rolling(WIND).mean().shift(-WIND )
     data['tv_mean'] = data['TV'].rolling(WIND).mean().shift(1)
-    print data['tv_mean']
     for i, row in data.iterrows():
         if math.isnan(row['tv_mean']):
             idx = idx + 1
@@ -112,7 +111,7 @@ def main(days=30, sid=None, date_from=None):
         final['OR'] = final['OR'].apply(lambda x: float('%.2f' % x ))
         final['CR'] = final['CR'].apply(lambda x: float('%.2f' % x ))
         #final['HR'] = final.apply(lambda x: '%.2f' % x)
-        #print filter1(final)
+        print filter1(final)
         print "https://tw.stock.yahoo.com/q/ta?s=" + sid
         #print subset 
         #print df.tail(days)

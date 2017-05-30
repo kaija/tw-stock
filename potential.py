@@ -7,54 +7,54 @@ from datetime import timedelta
 import argparse
 import math
 
-WIND=5
 
-def filter1(data):
+def filter(data):
     del data['TO']
     del data['HP']
     del data['LP']
     del data['TC']
+    WIND=5
     total_len = len(data.index)
-    print total_len
-    mean5 = 0
-    start_idx = 0
-    start_dates = []
-    idx = 0
-    count5p = 0
-    count10p = 0
-    #print data.index
-    #print data['TV'].rolling(WIND).mean().shift(-WIND )
     data['tv_mean'] = data['TV'].rolling(WIND).mean().shift(1)
+    #return(0)
+    waves = []
+    idx = 0
     for i, row in data.iterrows():
-        if math.isnan(row['tv_mean']):
-            idx = idx + 1
+        #if math.isnan(row['tv_mean']):
+        #    idx = idx + 1
+        #    continue
+        if (row['TV'] > 2 * row['tv_mean'] and row['CR'] > 5) or row['OR'] == 10:
+            #wave first day
+            print i
+            waves.append(i)
             continue
-        if row['TV'] > 2 * row['tv_mean'] or row['CR'] == 10:
-            last_date = i       
-            start_idx = idx
-            start_dates.append(i)
-            mean5 = row['tv_mean']
-            idx = idx + 1
-            continue
-        if idx - start_idx < 5 and row['TV'] > 2 * mean5:
-            #same wave
-            idx = idx + 1
-            start_dates.append(i)
-            
-    return start_dates
+    print waves
+    print waves[-1]
     #print data
 
 def filter2(data, starts):
     data['tv_mean'] = data['TV'].rolling(WIND).mean().shift(1)
     
+def main(days=30, sid=None, date_from=None):
+    df = preprocess(days=days, sid=sid, date_from=date_from)
+    #print df
+    filter(df)
 
-def main(days=30, sid=None):
+def preprocess(days=30, sid=None, date_from=None):
 
     res = pd.DataFrame(columns=('id', 'rate'))
     try:
-        df = pd.DataFrame.from_csv('bystock/' + sid + ".csv")
+        if date_from == "today":
+            df = pd.DataFrame.from_csv('bystock/' + sid + ".csv")
+        else:
+            dfo = pd.DataFrame.from_csv('bystock/' + sid + ".csv")
+            fdate = datetime.datetime.strptime(date_from, "%Y%m%d")
+            df = dfo["20100101":fdate.strftime("%Y-%m-%d")]
+            #df = dfo[]
         subset = df.tail(days + 1)
+        print subset
         last_cp = 0
+        #initial some rate filed
         df_r = subset[0:0]
         df_r['YP'] = pd.Series(np.random.randn(0), index=df_r.index)
         df_f = subset[0:0]
@@ -62,26 +62,32 @@ def main(days=30, sid=None):
         df_f['LR'] = pd.Series(np.random.randn(0), index=df_f.index)
         df_f['OR'] = pd.Series(np.random.randn(0), index=df_f.index)
         df_f['CR'] = pd.Series(np.random.randn(0), index=df_f.index)
+        #copy the yesterday clode price to next day  (yesterday price)YP
         for idx,row in subset.iterrows():
+            row['TV'] = int(row['TV'] / 1000)
             row['YP'] = last_cp
             df_r.loc[idx] = row
             last_cp = row['CP']
-        #print df_r
+        #calculate rate field from YP
         for idx,row in df_r.iterrows():
             row['HR'] = (row['HP'] - row['YP']) * 100/row['YP']
             row['LR'] = (row['LP'] - row['YP']) * 100/row['YP']
             row['OR'] = (row['OP'] - row['YP']) * 100/row['YP']
             row['CR'] = (row['CP'] - row['YP']) * 100/row['YP']
             df_f.loc[idx] = row
-            #print row
+        #remove the first row
         final = df_f.tail(days)
-        final['TV'] = final['TV'].apply(lambda x: int(x/1000) )
-        final['HR'] = final['HR'].apply(lambda x: '%.2f' % x )
-        final['LR'] = final['LR'].apply(lambda x: '%.2f' % x )
-        final['OR'] = final['OR'].apply(lambda x: '%.2f' % x )
-        final['CR'] = final['CR'].apply(lambda x: '%.2f' % x )
+        #
+        #final['TV'] = final.apply(lambda x: x/1000 )
+        final['HR'] = final['HR'].apply(lambda x: float('%.2f' % x ))
+        final['LR'] = final['LR'].apply(lambda x: float('%.2f' % x ))
+        final['OR'] = final['OR'].apply(lambda x: float('%.2f' % x ))
+        final['CR'] = final['CR'].apply(lambda x: float('%.2f' % x ))
         #final['HR'] = final.apply(lambda x: '%.2f' % x)
-        print filter1(final)
+        #print final
+        return final
+        #print filter1(final)
+        #print "https://tw.stock.yahoo.com/q/ta?s=" + sid
         #print subset 
         #print df.tail(days)
     except Exception as e:
@@ -96,6 +102,8 @@ if __name__ == "__main__":
                     help="The stock id")
     parser.add_argument("-d", "--days", type=int, default=50,
                     help="The n days")
+    parser.add_argument("-f", "--fromdate", type=str, default="today",
+                    help="The analyzed date string")
 
     args = parser.parse_args()
-    main(days=args.days, sid = args.stockid)
+    main(days=args.days, sid = args.stockid, date_from=args.fromdate)

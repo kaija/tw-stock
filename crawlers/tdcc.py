@@ -1,8 +1,8 @@
-import os, csv, requests, sys
+import os, csv, requests, sys, datetime
 import pandas as pd
 from bs4 import BeautifulSoup
 
-def get_tdcc_date(stock_id):
+def get_tdcc_date(stock_id, exist_file_list):
 	date_list =[]
 	url = "http://www.tdcc.com.tw/smWeb/QryStock.jsp"
 	res = requests.get(url)
@@ -12,7 +12,24 @@ def get_tdcc_date(stock_id):
 		for option in row:
 			if option.isdigit():
 				date_list.append(option)
-	return date_list
+
+	base_date='empty'
+	old_file_name = None
+	for file_name in exist_file_list:
+	    if file_name.startswith(stock_id):
+	    	old_file_name = file_name
+	        base_date = file_name.split('_')[1].split('.')[0]
+	        break
+	if base_date =='empty':
+		base_date = '19000101'	
+	base_date_covert = datetime.datetime.strptime(base_date, "%Y%m%d").date()
+
+	new_date_list = []
+	for date in date_list:
+		date_convert = datetime.datetime.strptime(date, "%Y%m%d").date()
+		if date_convert > base_date_covert:
+			new_date_list.append(date)
+	return new_date_list, old_file_name
 
 def get_tdcc(stock_id, date_list):
     data = []
@@ -52,17 +69,33 @@ def get_all_stockid(data_path):
 		stock_list.append(stock_id)
 	return stock_list
 
-
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+exist_file_list = os.listdir('tdcc/')
 stock_list = get_all_stockid('bystock/')
-# stock_list = ['0055']
+# stock_list = ['0015', '0050']
 
 for stock_id in stock_list:
-	date_list = get_tdcc_date(stock_id=stock_id)
-	df_data = get_tdcc(stock_id=stock_id, date_list=date_list)
-	file_name = "tdcc/{}_tdcc.csv".format(stock_id)
-	df_data.to_csv(file_name, sep=',', index=False, encoding='utf-8')
-	print file_name, "completed"
+	try:
+		date_list, old_file_name = get_tdcc_date(stock_id=stock_id, exist_file_list=exist_file_list)
+		new_df_data = get_tdcc(stock_id=stock_id, date_list=date_list)
+	
+		if len(date_list) == 0 :
+			# print stock_id, "no need to update"
+			continue
+		elif old_file_name == None:
+			new_file_name = "{}_{}.csv".format(stock_id, date_list[0] if len(new_df_data)>0 else 'empty')
+			new_df_data.to_csv("tdcc/{}".format(new_file_name), sep=',', index=False, encoding='utf-8')
+			# print new_file_name, "csv file created"
+		else:
+			orig_df = pd.read_csv('tdcc/{}'.format(old_file_name))
+			df = pd.concat([new_df_data, orig_df])		
+			new_file_name = "{}_{}.csv".format(stock_id, date_list[0] if len(df)>0 else 'empty')		
+			os.rename('tdcc/{}'.format(old_file_name), 'tdcc/{}'.format(new_file_name))		
+			df.to_csv("tdcc/{}".format(new_file_name), sep=',', index=False, encoding='utf-8')
+			# print new_file_name, "added {} data".format(len(new_df_data))
+	except:
+		print stock_id, "get error"
+		continue
 
